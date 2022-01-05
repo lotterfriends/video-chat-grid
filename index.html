@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>video-chat-grid</title>
+</head>
+<body>
+  <div class="page">
+    <div class="conference">
+      <div class="holder"></div>
+    </div>
+  </div>
+
+  <button onclick="addVideo()">add video</button>
+  <script>
+
+    const margin = 5;
+    const ratios = ['4:3', '16:9', '1:1', '1:2']
+    const selectedRatioIndex = 0;
+    const ratio = getRatio();
+    const holder = document.querySelector('.holder');
+
+    function getRatio() {
+      const ratio = ratios[selectedRatioIndex].split(":");
+      return ratio[1] / ratio[0];
+    }
+
+    function resizer(width) {
+      for (const child of [...document.querySelectorAll('.video-container')]) {
+        child.style.margin = margin + 'px';
+        child.style.width = width + 'px';
+        child.style.height = (width * ratio) + 'px';
+        child.setAttribute('data-aspect', ratios[selectedRatioIndex]);
+      }
+    }
+
+    function area(holderWidth, holderHeight, increment) {
+      let elementWidth = 0;
+      let elementHeight = increment * ratio + (margin * 2);
+      for (let index = 0; index < holder.children.length; index++) {
+        if ((elementWidth + increment) > holderWidth) {
+          elementWidth = 0;
+          elementHeight = elementHeight + (increment * ratio) + (margin * 2);
+        }
+        elementWidth = elementWidth + increment + (margin * 2);
+      }
+      return (elementHeight > holderHeight || increment > holderWidth) ? false : increment;
+    }
+
+    function resize() {
+      const {holderWidth, holderHeight} = dimensions();
+      let max = 0
+      let i = 1
+      while (i < holderWidth) {
+        if (!area(holderWidth, holderHeight, i)) {
+          max = i - 1;
+          break;
+        }
+        i++;
+      }
+      max = max - (margin * 2);
+      resizer(max);
+    }
+
+    function dimensions() {
+      return {
+        holderWidth: holder.offsetWidth - (margin * 2),
+        holderHeight: holder.offsetHeight - (margin * 2)
+      }
+    }
+
+    function addVideo() {
+      const videoContainer = document.createElement('div');
+      videoContainer.classList.add('video-container');
+      const videoNode = document.createElement('video');
+      videoNode.innerHTML = `
+        <source id='mp4' src="http://media.w3.org/2010/05/sintel/trailer.mp4" type='video/mp4' />
+        <source id='webm' src="http://media.w3.org/2010/05/sintel/trailer.webm" type='video/webm' />
+        <source id='ogv' src="http://media.w3.org/2010/05/sintel/trailer.ogv" type='video/ogg' />
+      `;
+      videoNode.autoplay = true;
+      videoNode.loop = true;
+      videoNode.controls = false;
+      videoNode.muted = true;
+      videoContainer.append(videoNode);
+      holder.append(videoContainer);
+      resize();
+    }
+
+    window.addEventListener('resize', function () {
+      resize();
+    });
+
+  </script>
+</body>
+</html>
